@@ -1,4 +1,4 @@
-# Development Settup
+# Development Setup
 
 Setting up a new development environment on a newly installed Ubuntu distribution. **dev-setup** uses the `install.sh` script which will configure the following components automatically:
 

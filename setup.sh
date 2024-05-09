@@ -1,4 +1,8 @@
 #!/bin/bash
+# Development setup 
+# https://github.com/DinhThanhPhongDo/dev-setup
+#
+# Copyright (c) Dinh Thanh Phong Do
 
 # check linux version
 # -------------------
@@ -93,8 +97,6 @@ install_docker(){
     sudo systemctl start docker
     sudo docker pull hello-world:latest
     sudo docker run hello-world:latest
-
-    # sudo apt autoremove -y
 }
 
 setup_github_ssh(){
@@ -155,7 +157,7 @@ setup_github_ssh(){
     if [ "${linux_version}" = "wsl" ]; then
         cat "${HOME}/.ssh/github.pub" | clip.exe
     else
-        xclip -selection clipboard < "${HOME}/.ssh/github.pub"
+        cat "${HOME}/.ssh/github.pub" | xclip
     fi
     echo "Press any button to continue..."
     read continue
@@ -201,7 +203,7 @@ read -p "Do you want to install docker? [y/n]: " answer
 case "$answer" in
     [yY]|[yY][eE][sS]) 
         echo "Installing docker..."
-        install_docker
+        install_docker "${linux_version}"
         ;;
     [nN]|[nN][oO])
         echo "No action taken. Exiting..."
