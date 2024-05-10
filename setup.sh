@@ -3,6 +3,21 @@
 # https://github.com/DinhThanhPhongDo/dev-setup
 #
 # Copyright (c) Dinh Thanh Phong Do
+export DEBIAN_FRONTEND=noninteractive
+
+
+# Regular Colors
+----------------
+color_off='\033[0m'       # Text Reset
+Black='\033[0;30m'        # Black
+Red='\033[0;31m'          # Red
+green='\033[0;32m'        # Green
+Green='\033[1;92m'        # Green
+Yellow='\033[0;33m'       # Yellow
+Blue='\033[0;34m'         # Blue
+Purple='\033[0;35m'       # Purple
+cyan='\033[1;96m'         # Cyan
+White='\033[0;37m'        # White
 
 # check linux version
 # -------------------
@@ -21,26 +36,24 @@ remove(){
     for package in xclip ncdu tmux git; do
         if ! command -v "${package}" &> /dev/null; then
             # y = less noisy and assume yes
-            echo "-----"
-            echo "uninstalling ${package}"
+            echo "${green}\\nUninstall ${package}...${color_off}"
             sudo apt remove -y "${package}"
         fi
     done
 
     sudo apt autoremove -y
-    echo "remove: done."
 }
 
 install_native(){
-    echo "install native"
     for package in xclip ncdu tmux git; do
+        echo "${green}\\nInstall ${package}${color_off}"
         sudo apt update -y && sudo apt install -y "${package}"
     done
 }
 
 install_wsl(){
-    echo "install wsl"
     for package in wsl ncdu tmux git; do
+        echo "${green}\\nInstall ${package}${color_off} "
         sudo apt update -y && sudo apt install -y "${package}"
     done
 }
@@ -68,7 +81,7 @@ install_docker(){
     
 
     # 3) Install the Docker packages.
-    sudo apt-get update
+    sudo apt-get update -y
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
     # 4) Linux post-installation steps for Docker Engine
@@ -109,12 +122,11 @@ setup_github_ssh(){
 
     # 1) if necessary, create a key pair
     if [ -f "${HOME}/.ssh/github" ] && [ -f "${HOME}/.ssh/github.pub" ]; then
-        echo "SSH keys already exist. Nothing to do."
+        echo "${green}SSH keys already exist. Nothing to do.${color_off}"
     else
         # Create SSH key pair
-        echo "Generating new SSH key pair..."
         ssh-keygen -t "${ALGORITHM}" -f "${HOME}/.ssh/github" -N "${PASSPHRASE}"
-        echo "New SSH key pair generated."
+        echo "${green}New SSH key pair generated.${color_off}"
     fi
 
     # 2) add to the machine ssh agent
@@ -154,7 +166,7 @@ setup_github_ssh(){
     fi
 
     # 4) test ssh config
-    echo "test your github ssh config..."
+    echo "${green}test your github ssh config...${color_off}"
     ssh -T git@github.com
 
 }
@@ -163,43 +175,51 @@ setup_github_ssh(){
 # script
 # --------------
 linux_version=$(check_linux_version)
+echo "${Green}remove and install...${color_off} "
 
 if [ "${linux_version}" = "native" ]; then
-    echo "remove and install native"
     remove
     install_native
 else
-    echo "remove and install wsl"
     remove
     install_wsl
 fi
+while true; do
+    printf "${cyan}Do you want to set up github ssh? [y/n]:${color_off}"
+    read answer
+    case "$answer" in
+        [yY]|[yY][eE][sS]) 
+            echo "${Green}set up github ssh...${color_off}"
+            read -p "set the git username:" username
+            read -p "set the git email:" email
+            setup_github_ssh "${linux_version}" "${username}" "${email}"
+            break
+            ;;
+        [nN]|[nN][oO])
+            echo "${Green}No action taken. Exiting...${color_off}"
+            break
+            ;;
+        *)
+            echo "Invalid input. Please enter 'y' or 'n'."
+            ;;
+    esac
+done
 
-read -p "Do you want to set up github ssh? [y/n]: " answer
-case "$answer" in
-    [yY]|[yY][eE][sS]) 
-        echo "set up github ssh..."
-        read -p "set the git username:" username
-        read -p "set the git email:" email
-        setup_github_ssh "${linux_version}" "${username}" "${email}"
-        ;;
-    [nN]|[nN][oO])
-        echo "No action taken. Exiting..."
-        ;;
-    *)
-        echo "Invalid input. Please enter 'y' or 'n'."
-        ;;
-esac
-
-read -p "Do you want to install docker? [y/n]: " answer
-case "$answer" in
-    [yY]|[yY][eE][sS]) 
-        echo "Installing docker..."
-        install_docker "${linux_version}"
-        ;;
-    [nN]|[nN][oO])
-        echo "No action taken. Exiting..."
-        ;;
-    *)
-        echo "Invalid input. Please enter 'y' or 'n'."
-        ;;
-esac
+while true; do
+    printf "${cyan}Do you want to set up github ssh? [y/n]:${color_off}"
+    read answer
+    case "$answer" in
+        [yY]|[yY][eE][sS]) 
+            echo "${Green}Installing Docker...${color_off}"
+            install_docker "${linux_version}"
+            break
+            ;;
+        [nN]|[nN][oO])
+            echo "${Green}No action taken. Exiting...${color_off}"
+            break
+            ;;
+        *)
+            echo "Invalid input. Please enter 'y' or 'n'."
+            ;;
+    esac
+done
