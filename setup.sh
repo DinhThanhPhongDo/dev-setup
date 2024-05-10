@@ -6,61 +6,57 @@
 
 # check linux version
 # -------------------
-check_linux_version(){
-    linux_version=""
-    # Check if /proc/version exists (common in Linux but not in WSL)
+check_linux_version() {
     if grep -qi microsoft /proc/version; then
-    linux_version="wsl"
+        echo "wsl"
     else
-    linux_version="native"
+        echo "native"
     fi
-
-    return ${linux_version}
 }
 
 # install function
 # ----------------
 remove(){
 
-    if ! command -v xclip &> /dev/null; then
-        sudo apt remove -y xclip
-    fi
+    for package in xclip ncdu tmux git; do
+        if ! command -v "${package}" &> /dev/null; then
+            # y = less noisy and assume yes
+            echo "-----"
+            echo "uninstalling ${package}"
+            sudo apt remove -y "${package}"
+        fi
+    done
 
-    if ! command -v ncdu &> /dev/null; then
-        sudo apt remove -y ncdu
-    fi
-
-    if ! command -v git &> /dev/null; then
-        sudo apt remove -y git
-    fi
-    sudo apt autoremove
+    sudo apt autoremove -y
+    echo "remove: done."
 }
 
 install_native(){
-    sudo apt update && sudo apt install -y xclip
-    sudo apt update && sudo apt install -y ncdu
-    sudo apt update && sudo apt install -y git
+    echo "install native"
+    for package in xclip ncdu tmux git; do
+        sudo apt update -y && sudo apt install -y "${package}"
+    done
 }
 
 install_wsl(){
-    sudo apt update && sudo apt install -y wsl
-    sudo apt update && sudo apt install -y ncdu
-    sudo apt update && sudo apt install -y git
+    echo "install wsl"
+    for package in wsl ncdu tmux git; do
+        sudo apt update -y && sudo apt install -y "${package}"
+    done
 }
 
 install_docker(){
     linux_version="$1"
-    sudo apt-get update
+    
 
     # 1) uninstall
     for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do
-        sudo apt-get remove $pkg;
+        sudo apt-get update -y && sudo apt-get remove $pkg -y;
     done
 
     # 2) installing using the apt repository
     # Add Docker's official GPG key:
-    sudo apt-get update
-    sudo apt-get install -y ca-certificates curl
+    sudo apt-get update -y && sudo apt-get install -y ca-certificates curl
     sudo install -m 0755 -d /etc/apt/keyrings
     sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
     sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -69,9 +65,10 @@ install_docker(){
         "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
         $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
         sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-    sudo apt-get update
+    
 
     # 3) Install the Docker packages.
+    sudo apt-get update
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
     # 4) Linux post-installation steps for Docker Engine
@@ -84,8 +81,8 @@ install_docker(){
     fi
 
     # Check if the current user is a member of the "docker" group
-    if ! groups $USER | grep -q '\bdocker\b'; then
-        sudo usermod -aG docker $USER
+    if ! groups "${USER}" | grep -q '\bdocker\b'; then
+        sudo usermod -aG docker "${USER}"
         newgrp docker
     fi
 
@@ -103,10 +100,6 @@ setup_github_ssh(){
     linux_version="$1"
     user_name="$2"
     user_email="$3"
-    
-    echo $user_email
-    echo $user_name
-    echo "***************************************"
 
     git config --global user.name "${user_name}"
     git config --global user.email "${user_email}"
@@ -159,8 +152,6 @@ setup_github_ssh(){
     else
         cat "${HOME}/.ssh/github.pub" | xclip
     fi
-    echo "Press any button to continue..."
-    read continue
 
     # 4) test ssh config
     echo "test your github ssh config..."
@@ -173,7 +164,7 @@ setup_github_ssh(){
 # --------------
 linux_version=$(check_linux_version)
 
-if [ "${linux_version}" == "native" ]; then
+if [ "${linux_version}" = "native" ]; then
     echo "remove and install native"
     remove
     install_native
