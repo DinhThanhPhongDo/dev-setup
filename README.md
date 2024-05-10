@@ -11,5 +11,5 @@ Setting up a new development environment on a newly installed Ubuntu distributio
 Download the script file using [wget](https://www.gnu.org/software/wget):
 
 ```bash
-sh -c "$(wget -O - https://github.com/DinhThanhPhongDo/dev-setup/raw/HEAD/install.sh)"
+sh -c "$(wget -O - https://github.com/DinhThanhPhongDo/dev-setup/raw/HEAD/setup.sh)"
 ```
