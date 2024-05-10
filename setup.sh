@@ -104,6 +104,7 @@ install_docker(){
     if [ "${linux_version}" = "wsl" ]; then
         powershell.exe -Command "wsl --update"
     fi
+    echo "${green}\\nTest your docker...${color_off}"
     sudo systemctl start docker
     sudo docker pull hello-world:latest
     sudo docker run hello-world:latest
@@ -175,7 +176,7 @@ setup_github_ssh(){
 # script
 # --------------
 linux_version=$(check_linux_version)
-echo "${Green}remove and install...${color_off} "
+echo "${Green}Remove and install...${color_off} "
 
 if [ "${linux_version}" = "native" ]; then
     remove
@@ -184,12 +185,13 @@ else
     remove
     install_wsl
 fi
+
 while true; do
-    printf "${cyan}Do you want to set up github ssh? [y/n]:${color_off}"
-    read answer
+    printf "${cyan}Do you want to set up github ssh? [y/n]: ${color_off}" && read answer
+
     case "$answer" in
         [yY]|[yY][eE][sS]) 
-            echo "${Green}set up github ssh...${color_off}"
+            echo "${Green}Set up github ssh...${color_off}"
             read -p "set the git username:" username
             read -p "set the git email:" email
             setup_github_ssh "${linux_version}" "${username}" "${email}"
@@ -206,8 +208,8 @@ while true; do
 done
 
 while true; do
-    printf "${cyan}Do you want to set up github ssh? [y/n]:${color_off}"
-    read answer
+    printf "${cyan}Do you want to install docker? [y/n]: ${color_off}" && read answer
+
     case "$answer" in
         [yY]|[yY][eE][sS]) 
             echo "${Green}Installing Docker...${color_off}"
