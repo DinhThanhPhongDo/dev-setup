@@ -21,11 +21,20 @@ White='\033[0;37m'        # White
 
 # check linux version
 # -------------------
-check_linux_version() {
+check_platform() {
     if grep -qi microsoft /proc/version; then
         echo "wsl"
     else
         echo "native"
+    fi
+}
+
+check_distro(){
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        if [ -n "$NAME" ]; then
+            echo "$NAME"
+        fi
     fi
 }
 
@@ -41,25 +50,34 @@ remove(){
         fi
     done
 
+    echo "${green}\\nUninstall unused packages...${color_off}"
     sudo apt autoremove -y
 }
 
 install_native(){
-    for package in xclip ncdu tmux git; do
+    for package in xclip; do
         echo "${green}\\nInstall ${package}${color_off}"
         sudo apt update -y && sudo apt install -y "${package}"
     done
 }
 
 install_wsl(){
-    for package in wsl ncdu tmux git; do
+    for package in wsl; do
+        echo "${green}\\nInstall ${package}${color_off} "
+        sudo apt update -y && sudo apt install -y "${package}"
+    done
+}
+
+install_distro(){
+    for package in ncdu tmux git; do
         echo "${green}\\nInstall ${package}${color_off} "
         sudo apt update -y && sudo apt install -y "${package}"
     done
 }
 
 install_docker(){
-    linux_version="$1"
+    platform="$1"
+    distro="$2"
     
 
     # 1) uninstall
@@ -71,13 +89,29 @@ install_docker(){
     # Add Docker's official GPG key:
     sudo apt-get update -y && sudo apt-get install -y ca-certificates curl
     sudo install -m 0755 -d /etc/apt/keyrings
-    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-    sudo chmod a+r /etc/apt/keyrings/docker.asc
-    # Add the repository to apt sources:
-    echo \
-        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+    if [ "${distro}" = "Debian GNU/Linux"]; then
+        sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+
+        # Add the repository to Apt sources:
+        echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
         $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
         sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
+
+
+    else
+        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+
+        # Add the repository to apt sources:
+        echo \
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+            $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    fi
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+
     
 
     # 3) Install the Docker packages.
@@ -101,7 +135,7 @@ install_docker(){
 
     # 5) Verify that the Docker Engine installation is successful by running the hello-world image.
     # https://askubuntu.com/questions/1379425/system-has-not-been-booted-with-systemd-as-init-system-pid-1-cant-operate
-    if [ "${linux_version}" = "wsl" ]; then
+    if [ "${platform}" = "wsl" ]; then
         powershell.exe -Command "wsl --update"
     fi
     echo "${green}\\nTest your docker...${color_off}"
@@ -111,7 +145,7 @@ install_docker(){
 }
 
 setup_github_ssh(){
-    linux_version="$1"
+    platform="$1"
     user_name="$2"
     user_email="$3"
 
@@ -160,7 +194,7 @@ setup_github_ssh(){
     chmod 600 "$ssh_config"
     # 4) add publickey to github host
     # https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account?platform=linux&tool=webui
-    if [ "${linux_version}" = "wsl" ]; then
+    if [ "${platform}" = "wsl" ]; then
         cat "${HOME}/.ssh/github.pub" | clip.exe
     else
         cat "${HOME}/.ssh/github.pub" | xclip
@@ -175,15 +209,19 @@ setup_github_ssh(){
 
 # script
 # --------------
-linux_version=$(check_linux_version)
+platform=$(check_linux_version)
+distro=$(check_distro)
+
 echo "${Green}Remove and install...${color_off} "
 
-if [ "${linux_version}" = "native" ]; then
+if [ "${platform}" = "native" ]; then
     remove
     install_native
+    install_distro
 else
     remove
     install_wsl
+    install_distro
 fi
 
 while true; do
@@ -213,7 +251,7 @@ while true; do
     case "$answer" in
         [yY]|[yY][eE][sS]) 
             echo "${Green}Installing Docker...${color_off}"
-            install_docker "${linux_version}"
+            install_docker "${linux_version}" "${distro}"
             break
             ;;
         [nN]|[nN][oO])
