@@ -7,7 +7,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 
 # Regular Colors
-----------------
+# ----------------
 color_off='\033[0m'       # Text Reset
 Black='\033[0;30m'        # Black
 Red='\033[0;31m'          # Red
@@ -75,75 +75,6 @@ install_distro(){
     done
 }
 
-install_docker(){
-    platform="$1"
-    distro="$2"
-    
-
-    # 1) uninstall
-    for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do
-        sudo apt-get update -y && sudo apt-get remove $pkg -y;
-    done
-
-    # 2) installing using the apt repository
-    # Add Docker's official GPG key:
-    sudo apt-get update -y && sudo apt-get install -y ca-certificates curl
-    sudo install -m 0755 -d /etc/apt/keyrings
-    if [ "${distro}" = "Debian GNU/Linux"]; then
-        sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
-
-        # Add the repository to Apt sources:
-        echo \
-        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
-        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-        sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        sudo apt-get update
-
-
-    else
-        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-
-        # Add the repository to apt sources:
-        echo \
-            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-            $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-    fi
-    sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-
-    
-
-    # 3) Install the Docker packages.
-    sudo apt-get update -y
-    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-    # 4) Linux post-installation steps for Docker Engine
-    # https://docs.docker.com/engine/install/linux-postinstall/
-
-
-    # Check if the "docker" group exists
-    if ! grep -q "^docker:" /etc/group; then
-        sudo groupadd docker
-    fi
-
-    # Check if the current user is a member of the "docker" group
-    if ! groups "${USER}" | grep -q '\bdocker\b'; then
-        sudo usermod -aG docker "${USER}"
-        newgrp docker
-    fi
-
-    # 5) Verify that the Docker Engine installation is successful by running the hello-world image.
-    # https://askubuntu.com/questions/1379425/system-has-not-been-booted-with-systemd-as-init-system-pid-1-cant-operate
-    if [ "${platform}" = "wsl" ]; then
-        powershell.exe -Command "wsl --update"
-    fi
-    echo "${green}\\nTest your docker...${color_off}"
-    sudo systemctl start docker
-    sudo docker pull hello-world:latest
-    sudo docker run hello-world:latest
-}
-
 setup_github_ssh(){
     platform="$1"
     user_name="$2"
@@ -201,9 +132,81 @@ setup_github_ssh(){
     fi
 
     # 4) test ssh config
-    echo "${green}test your github ssh config...${color_off}"
+    echo "${green}Press any button to test your github ssh config...${color_off}"
+    read continue
     ssh -T git@github.com
 
+}
+
+install_docker(){
+    platform="$1"
+    distro="$2"
+    
+
+    # 1) uninstall
+    for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do
+        sudo apt-get update -y && sudo apt-get remove $pkg -y;
+    done
+
+    # 2) installing using the apt repository
+    # Add Docker's official GPG key:
+    sudo apt-get update -y && sudo apt-get install -y ca-certificates curl
+    sudo install -m 0755 -d /etc/apt/keyrings
+    if [ "${distro}" = "Debian GNU/Linux"]; then
+        sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+        sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+        # Add the repository to Apt sources:
+        echo \
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+            $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
+
+
+    else
+        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+        # Add the repository to apt sources:
+        echo \
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+            $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    fi
+
+
+    
+
+    # 3) Install the Docker packages.
+    sudo apt-get update -y
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+    # 4) Linux post-installation steps for Docker Engine
+    # https://docs.docker.com/engine/install/linux-postinstall/
+
+
+    # Check if the "docker" group exists
+    if ! grep -q "^docker:" /etc/group; then
+        sudo groupadd docker
+    fi
+
+    # Check if the current user is a member of the "docker" group
+    if ! groups "${USER}" | grep -q '\bdocker\b'; then
+        sudo usermod -aG docker "${USER}"
+        newgrp docker
+    fi
+
+    # 5) Verify that the Docker Engine installation is successful by running the hello-world image.
+    # https://askubuntu.com/questions/1379425/system-has-not-been-booted-with-systemd-as-init-system-pid-1-cant-operate
+    if [ "${platform}" = "wsl" ]; then
+        powershell.exe -Command "wsl --update"
+    fi
+    echo "${green}\\nPresss any button to test your docker...${color_off}"
+    read continue
+    sudo systemctl start docker
+    sudo docker pull hello-world:latest
+    sudo docker run hello-world:latest
 }
 
 
