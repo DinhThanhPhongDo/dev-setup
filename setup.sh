@@ -1,10 +1,8 @@
 #!/bin/bash
-# Development setup 
+# Development setup for Debian and Ubunto distros.
 # https://github.com/DinhThanhPhongDo/dev-setup
 #
 # Copyright (c) Dinh Thanh Phong Do
-export DEBIAN_FRONTEND=noninteractive
-
 
 # Regular Colors
 # ----------------
@@ -56,16 +54,27 @@ remove(){
 
 install_native(){
     for package in xclip; do
-        echo "${green}\\nInstall ${package}${color_off}"
+        echo "${green}\\nInstall ${package}...${color_off}"
         sudo apt update -y && sudo apt install -y "${package}"
     done
 }
 
 install_wsl(){
     for package in wsl; do
-        echo "${green}\\nInstall ${package}${color_off} "
+        echo "${green}\\nInstall ${package}...${color_off} "
         sudo apt update -y && sudo apt install -y "${package}"
     done
+    
+    if grep -q "[boot]" /etc/wsl.conf; then
+        echo "${green}'systemd=true' already exists in /etc/wsl.conf. Nothing to do.${color_off}"
+    else
+        printf "[boot]\nsystemd=true" | sudo tee -a /etc/wsl.conf > /dev/null
+        echo "${green}Add 'systemd=true' to /etc/wsl.conf.${color_off}"
+
+        # Shutdown WSL after 10 seconds
+        echo "${green}Shutting down WSL. Please restart to finish install...${color_off}"
+        powershell.exe -Command "wsl --shutdown"
+    fi
 }
 
 install_distro(){
@@ -76,9 +85,9 @@ install_distro(){
 }
 
 setup_github_ssh(){
-    platform="$1"
-    user_name="$2"
-    user_email="$3"
+    platform="${1}"
+    user_name="${2}"
+    user_email="${3}"
 
     git config --global user.name "${user_name}"
     git config --global user.email "${user_email}"
@@ -145,14 +154,16 @@ install_docker(){
 
     # 1) uninstall
     for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do
+        echo echo "${green}\\nUninstall ${pkg}...${color_off}"
         sudo apt-get update -y && sudo apt-get remove $pkg -y;
     done
 
     # 2) installing using the apt repository
+    echo "${green}\nInstalling with ${distro} distro...${color_off}"
     # Add Docker's official GPG key:
     sudo apt-get update -y && sudo apt-get install -y ca-certificates curl
     sudo install -m 0755 -d /etc/apt/keyrings
-    if [ "${distro}" = "Debian GNU/Linux"]; then
+    if [ "${distro}" = "Debian GNU/Linux" ]; then
         sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
         sudo chmod a+r /etc/apt/keyrings/docker.asc
 
@@ -209,6 +220,14 @@ install_docker(){
     sudo docker run hello-world:latest
 }
 
+install_test(){
+    distro=${1}
+    if [ "${distro}" = "Debian GNU/Linux" ]; then
+        echo 1
+    else
+        echo 2
+    fi
+}
 
 # script
 # --------------
