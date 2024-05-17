@@ -7,24 +7,22 @@
 # Regular Colors
 # ----------------
 color_off='\033[0m'       # Text Reset
-Black='\033[0;30m'        # Black
-Red='\033[0;31m'          # Red
+red='\033[0;31m'          # Red
 green='\033[0;32m'        # Green
 Green='\033[1;92m'        # Green
-Yellow='\033[0;33m'       # Yellow
-Blue='\033[0;34m'         # Blue
-Purple='\033[0;35m'       # Purple
 cyan='\033[1;96m'         # Cyan
-White='\033[0;37m'        # White
 
 # check linux version
 # -------------------
 check_platform() {
     if grep -qi microsoft /proc/version; then
-        echo "wsl"
+        platform="wsl"
     else
-        echo "native"
+        platform="native"
     fi
+
+    echo ${platform}
+    return 0
 }
 
 check_distro(){
@@ -33,14 +31,18 @@ check_distro(){
         if [ -n "$NAME" ]; then
             echo "$NAME"
         fi
+        return 0
+    else
+        
+        return 1
     fi
 }
 
-# install function
-# ----------------
-remove(){
+# install / remove packages
+# -------------------------
 
-    for package in xclip ncdu tmux git; do
+remove(){
+    for package in xclip ncdu htop tmux git; do
         if ! command -v "${package}" &> /dev/null; then
             # y = less noisy and assume yes
             echo "${green}\\nUninstall ${package}...${color_off}"
@@ -66,19 +68,19 @@ install_wsl(){
     done
     
     if grep -q "[boot]" /etc/wsl.conf; then
-        echo "${green}'systemd=true' already exists in /etc/wsl.conf. Nothing to do.${color_off}"
+        echo "${green}System has been booted with systemd. Nothing to do.${color_off}"
     else
         printf "[boot]\nsystemd=true" | sudo tee -a /etc/wsl.conf > /dev/null
-        echo "${green}Add 'systemd=true' to /etc/wsl.conf.${color_off}"
+        echo "${green}System has not been booted with systemd as init system. Enable systemd...${color_off}"
 
-        # Shutdown WSL after 10 seconds
-        echo "${green}Shutting down WSL. Please restart to finish install...${color_off}"
+        # Shutdown WSL
+        echo "${green}Shutting down WSL. Please restart WSL and re-run the script to complete the installation...${color_off}"
         powershell.exe -Command "wsl --shutdown"
     fi
 }
 
 install_distro(){
-    for package in ncdu tmux git; do
+    for package in ncdu htop tmux git; do
         echo "${green}\\nInstall ${package}${color_off} "
         sudo apt update -y && sudo apt install -y "${package}"
     done
@@ -91,6 +93,7 @@ setup_github_ssh(){
 
     git config --global user.name "${user_name}"
     git config --global user.email "${user_email}"
+    git config --global core.editor "vim"
 
     ALGORITHM="ed25519"
     PASSPHRASE=""
@@ -145,6 +148,7 @@ setup_github_ssh(){
     read continue
     ssh -T git@github.com
 
+    return 1
 }
 
 install_docker(){
@@ -154,7 +158,7 @@ install_docker(){
 
     # 1) uninstall
     for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do
-        echo echo "${green}\\nUninstall ${pkg}...${color_off}"
+        echo "${green}\\nUninstall ${pkg}...${color_off}"
         sudo apt-get update -y && sudo apt-get remove $pkg -y;
     done
 
@@ -185,9 +189,6 @@ install_docker(){
             $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
             sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     fi
-
-
-    
 
     # 3) Install the Docker packages.
     sudo apt-get update -y
@@ -220,21 +221,20 @@ install_docker(){
     sudo docker run hello-world:latest
 }
 
-install_test(){
-    distro=${1}
-    if [ "${distro}" = "Debian GNU/Linux" ]; then
-        echo 1
-    else
-        echo 2
-    fi
-}
-
 # script
 # --------------
+echo "${Green}Start. Setting up development environment.${color_off}"
+
+
 platform=$(check_platform)
-distro=$(check_distro)
+distro=$(check_distro) || { echo "${red}Unsupported distribution. Please provide a Debian/Ubuntu distribution${color_off}"; exit; }
+
+echo "${green}Used platform: $platform${color_off}"
+echo "${green}Used distribution: $distro${color_off}"
+echo ""
 
 echo "${Green}Remove and install...${color_off} "
+
 
 if [ "${platform}" = "native" ]; then
     remove
@@ -285,3 +285,4 @@ while true; do
             ;;
     esac
 done
+echo "${Green}Development machine sucessfully set up!${color_off}"

@@ -2,7 +2,7 @@
 
 Setting up a new development environment on a newly installed Debian / Ubuntu distribution. **dev-setup** uses the `setup.sh` script which will configure the following components automatically:
 
-- Install `ncdu`, `git`, `tmux`
+- Install `ncdu`, `htop`, `git`, `tmux`
 - Set up `ssh` for git
 - Install `docker`
 
