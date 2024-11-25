@@ -14,8 +14,7 @@ Download the script file using [wget](https://www.gnu.org/software/wget):
 cd
 wget -P ~/ https://github.com/DinhThanhPhongDo/dev-setup/archive/refs/heads/main.zip
 unzip main
-cd dev-setup-main
-sh start.sh
 rm -r main.zip
+sh dev-setup-main/start.sh
 rm -r dev-setup-main
 ```

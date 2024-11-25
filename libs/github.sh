@@ -47,7 +47,7 @@ setup_github_ssh(){
 
     # Set appropriate permissions for the SSH config file
     chmod 600 "$ssh_config"
-    echo "{$green} Please copy-paste your public key to your host"
+    echo -e"{$green} Please copy-paste your public key to your host:${color_off}"
     # 4) add publickey to github host
     # https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account?platform=linux&tool=webui
     if [ "${platform}" = "wsl" ]; then
