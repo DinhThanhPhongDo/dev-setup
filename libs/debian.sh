@@ -13,7 +13,7 @@ Green='\033[1;92m'        # Green
 cyan='\033[1;96m'         # Cyan
 
 remove(){
-    for package in xclip ncdu htop tmux git; do
+    for package in ncdu htop tmux git; do
         if ! command -v "${package}" &> /dev/null; then
             # y = less noisy and assume yes
             echo -e "${green}\\nUninstall ${package}...${color_off}"
@@ -26,7 +26,7 @@ remove(){
 }
 
 install(){
-    for package in xclip ncdu htop tmux git; do
+    for package in ncdu htop tmux git; do
         echo -e "${green}\\nInstall ${package}${color_off} "
         sudo apt update -y && sudo apt install -y "${package}"
     done

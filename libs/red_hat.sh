@@ -18,7 +18,7 @@ remove() {
     # and performs a cleanup of unused dependencies.
 
     # List of packages to be checked and removed if installed
-    for package in xclip ncdu htop tmux git; do
+    for package in ncdu htop tmux git; do
         # Check if the package is installed
         if yum list installed "${package}" >/dev/null 2>&1; then
             # Notify the user about the uninstallation process
@@ -34,7 +34,7 @@ remove() {
 }
 
 install(){
-    for package in xclip ncdu htop tmux git; do
+    for package in ncdu htop tmux git; do
         echo -e "${green}\\nInstall ${package}${color_off} "
         sudo yum check-update > /dev/null 2>&1
         sudo yum install -q -y "${package}"
