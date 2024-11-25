@@ -70,6 +70,27 @@ while true; do
 done
 
 while true; do
+    printf "${cyan}Do you want to set up gitlab ssh? [y/n]: ${color_off}" && read answer
+
+    case "$answer" in
+        [yY]|[yY][eE][sS]) 
+            echo -e "${Green}Set up gitlab ssh...${color_off}"
+            read -p "set the git username:" username
+            read -p "set the git email:" email
+            setup_github_ssh "${platform}" "${username}" "${email}"
+            break
+            ;;
+        [nN]|[nN][oO])
+            echo -e "${Green}No action taken. Exiting...${color_off}"
+            break
+            ;;
+        *)
+            echo "Invalid input. Please enter 'y' or 'n'."
+            ;;
+    esac
+done
+
+while true; do
     printf "${cyan}Do you want to install docker? [y/n]: ${color_off}" && read answer
 
     case "$answer" in
