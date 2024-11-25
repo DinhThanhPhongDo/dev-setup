@@ -22,7 +22,7 @@ setup_gitlab_ssh(){
     eval $(ssh-agent -s)
     ssh-add "${HOME}/.ssh/gitlab"
 
-    # 3) add a config for the github host
+    # 3) add a config for the gitlab host
     # Path to the SSH config file
     ssh_config="$HOME/.ssh/config"
 
@@ -52,7 +52,7 @@ setup_gitlab_ssh(){
     cat "${HOME}/.ssh/gitlab.pub"
 
     # 4) test ssh config
-    echo -e "${green}Press any button to test your github ssh config...${color_off}"
+    echo -e "${green}Press any button to test your gitlab ssh config...${color_off}"
     read continue
     ssh -T git@gitlab.aerospacelab.be
 

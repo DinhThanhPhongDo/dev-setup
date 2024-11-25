@@ -18,6 +18,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 source ${SCRIPT_DIR}/libs/check.sh
 source ${SCRIPT_DIR}/libs/github.sh
+source ${SCRIPT_DIR}/libs/gitlab.sh
 
 platform=$(check_platform)
 distro=$(check_distro) || { echo "${red}Unsupported distribution. Please provide a Debian/Ubuntu distribution${color_off}"; exit; }
@@ -77,7 +78,7 @@ while true; do
             echo -e "${Green}Set up gitlab ssh...${color_off}"
             read -p "set the git username:" username
             read -p "set the git email:" email
-            setup_github_ssh "${platform}" "${username}" "${email}"
+            setup_gitlab_ssh "${platform}" "${username}" "${email}"
             break
             ;;
         [nN]|[nN][oO])
