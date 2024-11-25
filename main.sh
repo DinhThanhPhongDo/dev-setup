@@ -69,7 +69,6 @@ while true; do
     esac
 done
 
-echo $distro
 while true; do
     printf "${cyan}Do you want to install docker? [y/n]: ${color_off}" && read answer
 
